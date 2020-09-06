@@ -3,10 +3,11 @@ from rest_framework.response import Response
 from rest_framework import authentication, permissions
 from django.contrib.auth.models import User
 from .serializers import ItemSerializer, OrderSerializer, OrderItemSerializer
-from .models import Item, Order, OrderItem
+from .models import Item, Order, CartItem
 from accounts.models import Profile
 from django.views.generic.detail import DetailView
 from django.http import JsonResponse
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 
 class ItemsView(APIView):
@@ -16,14 +17,12 @@ class ItemsView(APIView):
     * Requires token authentication.
     * Only admin users are able to access this view.
     """
-    # authentication_classes = [authentication.TokenAuthentication]
-    # permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
         """
         Return a list of all items.
         """
-        
         items = Item.objects.all()
         serializer = ItemSerializer(items, many=True)
         return Response(serializer.data)
@@ -75,7 +74,7 @@ class CartView(APIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            items = OrderItem.objects.filter(is_ordered=False)
+            items = CartItem.objects.filter(is_ordered=False)
             serializer = OrderItemSerializer(items, many=True)
             # return JsonResponse({'data': serializer.data}, status=200)
             return Response(serializer.data)
@@ -96,7 +95,7 @@ class CartView(APIView):
                 print("You already own this product")
                 return
 
-        order_item = OrderItem.objects.get_or_create(item=product)
+        order_item = CartItem.objects.get_or_create(item=product)
         order = Order.objects.get_or_create(owner=user_profile)
         order.item.add(product)
         order.save()
@@ -107,7 +106,7 @@ class CartView(APIView):
 
     
     def delete_from_cart(self, request):
-        items_to_delete = OrderItem.objects.filter(pk=request.data['item_id'])
+        items_to_delete = CartItem.objects.filter(pk=request.data['item_id'])
         if items_to_delete.exists():
             items_to_delete[0].delete()
             print("One item is deleted")

@@ -4,7 +4,7 @@ from rest_framework import authentication, permissions
 from django.contrib.auth.models import User
 from .models import Profile
 #from .serializers import ItemSerializer
-from core.models import Item, Order, OrderItem
+from core.models import Item, Order, CartItem
 from dj_rest_auth.registration.views import RegisterView
 
 
@@ -45,7 +45,8 @@ class ConfirmEmailView(APIView):
         self.object = confirmation = self.get_object()
         confirmation.confirm(self.request)
         # A React Router Route will handle the failure scenario
-        return HttpResponseRedirect('/api/rest-auth/login/')
+        # return HttpResponseRedirect('/api/rest-auth/login/')
+        return Response(data={'data': "Email is successfully verified"}, status=200)
 
     def get_object(self, queryset=None):
         key = self.kwargs['key']
@@ -57,7 +58,8 @@ class ConfirmEmailView(APIView):
                 email_confirmation = queryset.get(key=key.lower())
             except EmailConfirmation.DoesNotExist:
                 # A React Router Route will handle the failure scenario
-                return HttpResponseRedirect('/login/failure/')
+                # return HttpResponseRedirect('/login/failure/')
+                return Response(data={'data': "Verification link expired"}, status=404)
         return email_confirmation
 
     def get_queryset(self):

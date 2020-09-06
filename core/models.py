@@ -23,6 +23,11 @@ LABEL_CHOICES = (
     ('d', 'danger')
 )
 
+CART_STATUS = (
+    ('closed', 'Closed'),
+    ('opened', 'Opened')
+)
+
 class Item(models.Model):
     title = models.CharField(null=True, blank=True, max_length=255)
     price = models.FloatField(default=0)
@@ -40,13 +45,14 @@ class Item(models.Model):
         super(Item, self).save(*args, **kwargs)
 
 
-class OrderItem(models.Model):
+class CartItem(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
-    is_ordered = models.BooleanField(default=False)
+    # is_ordered = models.BooleanField(default=False)
     date_added = models.DateTimeField(auto_now_add=True)
-    date_ordered = models.DateTimeField(null=True, blank=True)
+    # date_ordered = models.DateTimeField(null=True, blank=True)
     quantity = models.IntegerField(default=1)
+    status = models.CharField(choices=CART_STATUS, default='opened', max_length=25)
 
     def __str__(self):
         return self.item.title
@@ -55,9 +61,9 @@ class OrderItem(models.Model):
 class Order(models.Model):
     ref_number = models.CharField(null=True, blank=True, max_length=250)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
-    item = models.ManyToManyField(OrderItem)
-    date_added = models.DateTimeField(auto_now_add=True)
-    date_ordered = models.DateTimeField(null=True, blank=True)
+    item = models.ManyToManyField(CartItem)
+    # date_added = models.DateTimeField(auto_now_add=True)
+    date_ordered = models.DateTimeField(auto_now_add=True)
     is_ordered = models.BooleanField(default=False)
 
     def get_cart_items(self):
